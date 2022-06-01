@@ -75,6 +75,7 @@ const YugalVars = {
     },
     pageNum: 1
 };
+
 const yugal = {
     production: () => {
         console.log('%cThis is a browser feature intended for developers. Do not enter anything here.', "background:black ;color: white; font-size: x-large");
@@ -178,22 +179,50 @@ function SomePage(){
             dothis();
         }
     },
-    include: (file)=> {
+    include: (file) => {
         var script = document.createElement('script');
         script.src = file;
         script.type = 'text/javascript';
         document.getElementsByTagName('body').item(0).appendChild(script);
     },
-    call: (file)=> {
+    call: (file) => {
         var script = document.createElement('script');
         script.src = `./modules/${file}/index.js`;
         script.type = 'text/javascript';
         document.getElementsByTagName('body').item(0).appendChild(script);
     },
-    files: (array)=>{
-        array.map((item)=>{
+    files: (array) => {
+        array.map((item) => {
             yugal.include(item);
         });
-    }
+    },
+    kebabize: str => {
+        return str.split('').map((letter, idx) => {
+            return letter.toUpperCase() === letter
+                ? `${idx !== 0 ? '-' : ''}${letter.toLowerCase()}`
+                : letter;
+        }).join('');
+    },
+    style: (obj) => {
+        des = "";
+        Object.keys(obj).forEach(function (nkey) {
+            end = "";
+            if (typeof obj[nkey] === 'number'){
+                end = `${obj[nkey]}px;`;
+            }
+            else{
+                end = `${obj[nkey]};`
+            }
+            des = des + "" + yugal.kebabize(nkey) + ":" + end;
+        });
+        return des;
+    },
+    css: (props, name)=>{
+        if (typeof props !== 'string'){
+            props = yugal.style(props);
+        }
+        yugal_style = document.getElementById("yugal-style");
+        yugal_style.innerHTML = `${yugal_style.innerHTML}${name}{${props}}`
+    } 
 };
 const html = (code) => code;
