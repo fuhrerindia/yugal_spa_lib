@@ -73,7 +73,8 @@ const YugalVars = {
     yugalErr: (error, type) => {
         yugal.navigate(YugalErrorPage(error, type));
     },
-    pageNum: 1
+    pageNum: 1,
+    importedCss: 0
 };
 
 const yugal = {
@@ -87,7 +88,8 @@ const yugal = {
         eval = () => { }
         YugalErrorPage = () => { return {} }
     },
-    navigate: ({ willMount, onMount, render, uri }) => {
+    navigate: ({ willMount, onMount, render, uri, historyTitle }) => {
+        historyTitle = !historyTitle ? uri : historyTitle;
         if (willMount !== undefined) {
             willMount();
         }
@@ -113,7 +115,8 @@ function SomePage(){
 }`));
         }
         if (uri !== undefined) {
-            history.pushState({ page: YugalVars.pageNum }, uri, uri);
+            // history.pushState({ page: YugalVars.pageNum }, uri, uri);
+            history.pushState({urlPath:`./${uri}`}, historyTitle, `./${uri}`)
             YugalVars.pageNum++;
         }
     },
@@ -223,6 +226,35 @@ function SomePage(){
         }
         yugal_style = document.getElementById("yugal-style");
         yugal_style.innerHTML = `${yugal_style.innerHTML}${name}{${props}}`
+    },
+    $: (key)=>document.querySelector(key),
+    StyleSheet: {
+        create: (css, beg) => {
+            beg = !beg ? "" : beg;
+            final_css = "";
+            Object.keys(css).map(key=>{
+                this_props = `${beg}${key}{`;
+                Object.keys(css[key]).map(prop=>{
+                    prop_val = typeof css[key][prop] === "number" ? `${String(css[key][prop])}px` : css[key][prop];
+                    this_props = `${this_props}${yugal.kebabize(prop)}:${prop_val};`;
+                });
+                this_props = this_props + `} `;
+                final_css = final_css + this_props;
+            });
+            return final_css;
+        },
+        inject: (css_string) => {
+            document.getElementById("yugal-style").innerHTML = `${document.getElementById("yugal-style").innerHTML}${css_string}`;
+        },
+        import: (url, id) => {
+            id = !id ? `yugal_imported_css${YugalVars.importedCss}` : id;
+            headcode = document.getElementsByTagName("head")[0].innerHTML;
+            headcode = headcode.split(YugalVars.yugalHeadComment);
+            headcode[0] = `<link rel="stylesheet" href="${url}" id="${id}">${headcode[0]}`;
+            document.getElementsByTagName("head")[0].innerHTML = `${headcode[0]}${YugalVars.yugalHeadComment}${headcode[1]}`;
+            YugalVars.importedCss = YugalVars.importedCss + 1;
+            return document.getElementById(id);
+        }
     } 
 };
 const html = (code) => code;
